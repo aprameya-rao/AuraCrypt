@@ -4,3 +4,5 @@ opencv-python
 mediapipe 
 numpy 
 python-multipart
+librosa
+soundfile
