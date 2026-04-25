@@ -1,6 +1,8 @@
 fastapi 
 uvicorn 
 opencv-python 
-mediapipe 
-numpy 
+mediapipe==0.10.21
+numpy==1.26.4
 python-multipart
+librosa
+soundfile

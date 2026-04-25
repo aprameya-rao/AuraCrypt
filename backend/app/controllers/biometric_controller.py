@@ -2,6 +2,7 @@ import os
 import tempfile
 from fastapi import UploadFile, HTTPException
 from app.services.video_processor import KineticBiometricService
+from app.services.audio_processor import audio_service
 
 # Instantiate our service
 kinetic_service = KineticBiometricService()
@@ -43,3 +44,29 @@ async def process_kinetic_upload(file: UploadFile):
         # 5. Cleanup: NEVER leave biometric video files sitting on the server
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+async def process_audio_upload(file: UploadFile):
+    # 1. Basic Validation: Ensure the user actually uploaded an audio file
+    if not file.content_type.startswith('audio/'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an audio file.")
+
+    try:
+        # 2. Read the file into memory as raw bytes
+        audio_bytes = await file.read()
+        
+        # 3. Hand the bytes to the Service (the worker) to do the math
+        binary_matrix = await audio_service.extract_binary_features(audio_bytes)
+        
+        # 4. Package the results for the API response
+        # Note: We must convert the NumPy array to a standard Python list (.tolist()) 
+        # because FastAPI/JSON cannot natively serialize NumPy arrays.
+        return {
+            "status": "success",
+            "filename": file.filename,
+            "matrix_length": len(binary_matrix),
+            "binary_matrix": binary_matrix.tolist() 
+        }
+        
+    except BaseException as e:
+        # Catch any errors (like unreadable audio formats) and return a 500 error
+        raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}")
