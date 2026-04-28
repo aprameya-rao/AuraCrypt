@@ -1,18 +1,18 @@
 import numpy as np
 
 class GaloisField:
-    def __init__(self, m=12):
+    def __init__(self, m=14):
         """
         Initializes the Galois Field GF(2^m).
         For our 3,296-bit biometric key, we use m=12 (which supports up to 4095 bits).
         """
         self.m = m
-        self.field_size = (1 << m) - 1  # 2^12 - 1 = 4095
+        self.field_size = (1 << m) - 1  # 16383
         
         # The primitive polynomial is what forces the math to "wrap around" 
         # when a number gets too big. For GF(2^12), the standard integer 
         # representation of the polynomial (x^12 + x^6 + x^4 + x + 1) is 4179.
-        self.primitive_poly = 4179
+        self.primitive_poly = 16427
         
         # Pre-compute lookup tables for blazing fast math
         self.exp_table = np.zeros(self.field_size * 2, dtype=np.int32)

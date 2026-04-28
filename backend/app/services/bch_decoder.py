@@ -5,7 +5,7 @@ class BCHDecoder:
     def __init__(self, message_bits=256, error_allowance=330):
         self.k = message_bits
         self.t = error_allowance
-        self.m = 12
+        self.m = 14
         self.parity_length = self.t * self.m
         self.n = self.k + self.parity_length  # 4216 total bits
 
@@ -119,12 +119,13 @@ class BCHDecoder:
         if len(corrupted_codeword) != self.n:
             raise ValueError(f"Codeword must be exactly {self.n} bits.")
 
+        aligned_codeword = corrupted_codeword[::-1]
         # Step 1: Check for errors
-        syndromes, has_error = self._calculate_syndromes(corrupted_codeword)
+        syndromes, has_error = self._calculate_syndromes(aligned_codeword)
         
         if not has_error:
             # Perfection! No errors to fix. Just slice off the first 256 bits.
-            return corrupted_codeword[:self.k]
+            return aligned_codeword[::-1][:self.k]
 
         # Step 2: Generate Error Locator Polynomial
         sigma, error_count = self._berlekamp_massey(syndromes)
@@ -143,14 +144,14 @@ class BCHDecoder:
             raise ValueError("Uncorrectable error pattern detected. Access Denied.")
 
         # Step 4: The Final Fix
-        corrected_codeword = np.copy(corrupted_codeword)
+        corrected_codeword = np.copy(aligned_codeword)
         for pos in error_positions:
             corrected_codeword[pos] ^= 1  # Flip the bit back (0->1 or 1->0)
 
         # Extract and return the perfectly restored 256-bit password hash
-        restored_password_hash = corrected_codeword[:self.k]
+        final_codeword = corrected_codeword[:self.k]
         
-        return restored_password_hash
+        return final_codeword[:self.k]
 
 # Global instance for the CryptoService
 bch_decoder = BCHDecoder()

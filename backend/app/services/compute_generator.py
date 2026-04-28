@@ -12,8 +12,9 @@ def poly_mult_gf(p1: list, p2: list) -> list:
             # Add (XOR) to the resulting polynomial
             result[i+j] = gf_engine.add(result[i+j], term)
     return result
-
-def compute_bch_generator(t=330, field_size=4095):
+    
+    
+def compute_bch_generator(t=330, field_size=16383):
     print(f"Starting computation for t={t} errors in GF(2^12)...")
     start_time = time.time()
     

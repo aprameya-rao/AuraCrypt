@@ -3,7 +3,7 @@ import numpy as np
 class CryptoService:
     def __init__(self):
         # We need our biometric key length to perfectly match our future Error-Corrected Password
-        self.master_key_length = 4216 
+        self.master_key_length = 4876
 
     def create_master_biometric_key(self, kinetic_array: np.ndarray, audio_binary: np.ndarray) -> np.ndarray:
         """
@@ -31,7 +31,7 @@ class CryptoService:
             
         return final_master_key
     
-    
+
     def left_rotate(self, value: int, shift: int) -> int:
         """Helper for the Hash: Circular bitwise left rotation for 32-bit integers."""
         return ((value << shift) | (value >> (32 - shift))) & 0xFFFFFFFF
