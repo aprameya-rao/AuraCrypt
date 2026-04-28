@@ -1,72 +1,112 @@
 import os
 import tempfile
-from fastapi import UploadFile, HTTPException
-from app.services.video_processor import KineticBiometricService
+import numpy as np
+from fastapi import UploadFile, Form, HTTPException
+from fastapi.concurrency import run_in_threadpool
+
+from app.services.video_processor import kinetic_service
 from app.services.audio_processor import audio_service
+from app.services.crypto_service import crypto_service
+from app.services.bch_encoder import bch_encoder
+from app.services.bch_decoder import bch_decoder
 
-# Instantiate our service
-kinetic_service = KineticBiometricService()
+# ==========================================
+# MOCK DATABASE (Replace with SQLite later)
+# ==========================================
+# Stores username as key, and the 4216-bit Locked Data array as value
+MOCK_DB = {} 
+# ==========================================
 
-async def process_kinetic_upload(file: UploadFile):
-    """
-    Validates the video file and orchestrates the biometric extraction.
-    """
-    # 1. Security Check: Ensure it's actually a video file
-    if not file.content_type.startswith("video/"):
-        raise HTTPException(status_code=400, detail="Invalid file type. Video required.")
-
-    temp_path = ""
+async def _extract_biometrics(video_file: UploadFile, audio_file: UploadFile) -> np.ndarray:
+    """Helper function to extract and merge the 4216-bit biometric key."""
+    # 1. Process Video
+    video_temp_path = ""
     try:
-        # 2. Save file temporarily to disk (OpenCV cannot read raw FastAPI byte streams)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
-            content = await file.read()
+            content = await video_file.read()
             temp_video.write(content)
-            temp_path = temp_video.name
-
-        # 3. The Handoff: Pass the file path to our pure Python math service
-        final_1d_matrix = kinetic_service.process_video(temp_path)
-
-        # 4. Return success (Convert a small sample to list so JSON can serialize it)
-        return {
-            "status": "success",
-            "message": "Kinetic biometric extracted and normalized.",
-            "matrix_size": final_1d_matrix.shape[0],
-            "data_sample": final_1d_matrix[:5].tolist() # Just the first 5 coordinates for verification
-        }
-
-    except ValueError as e:
-        # Caught an expected error (e.g., "No hands detected")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        # Caught an unexpected backend crash
-        raise HTTPException(status_code=500, detail="Internal processing error.")
+            video_temp_path = temp_video.name
+            
+        kinetic_array = await run_in_threadpool(kinetic_service.process_video, video_temp_path)
     finally:
-        # 5. Cleanup: NEVER leave biometric video files sitting on the server
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        if os.path.exists(video_temp_path):
+            os.remove(video_temp_path)
 
-async def process_audio_upload(file: UploadFile):
-    # 1. Basic Validation: Ensure the user actually uploaded an audio file
-    if not file.content_type.startswith('audio/'):
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an audio file.")
+    # 2. Process Audio
+    audio_bytes = await audio_file.read()
+    audio_array = await run_in_threadpool(audio_service.extract_binary_features, audio_bytes)
+
+    # 3. Combine and Pad to strictly 4216 bits
+    master_key = await run_in_threadpool(
+        crypto_service.create_master_biometric_key, kinetic_array, audio_array
+    )
+    return master_key
+
+async def enroll_user(username: str, password: str, video_file: UploadFile, audio_file: UploadFile):
+    """
+    Phase 1: Generates the Master Key, hashes the password, encodes it, 
+    locks it via XOR, and stores it in the database.
+    """
+    if username in MOCK_DB:
+        raise HTTPException(status_code=400, detail="User already exists.")
 
     try:
-        # 2. Read the file into memory as raw bytes
-        audio_bytes = await file.read()
-        
-        # 3. Hand the bytes to the Service (the worker) to do the math
-        binary_matrix = await audio_service.extract_binary_features(audio_bytes)
-        
-        # 4. Package the results for the API response
-        # Note: We must convert the NumPy array to a standard Python list (.tolist()) 
-        # because FastAPI/JSON cannot natively serialize NumPy arrays.
-        return {
-            "status": "success",
-            "filename": file.filename,
-            "matrix_length": len(binary_matrix),
-            "binary_matrix": binary_matrix.tolist() 
-        }
-        
-    except BaseException as e:
-        # Catch any errors (like unreadable audio formats) and return a 500 error
-        raise HTTPException(status_code=500, detail=f"Failed to process audio: {str(e)}")
+        # 1. Get 4216-bit Biometric Key (B)
+        biometric_key = await _extract_biometrics(video_file, audio_file)
+
+        # 2. Generate 256-bit TitanHash of the password
+        password_hash = await run_in_threadpool(crypto_service.titan_hash_password, password)
+
+        # 3. Bloat hash into 4216-bit Codeword (C) using BCH
+        codeword = await run_in_threadpool(bch_encoder.encode, password_hash)
+
+        # 4. The Lock: XOR the Codeword and the Biometric Key
+        locked_data = np.bitwise_xor(codeword, biometric_key)
+
+        # 5. Save to Database (Convert to list for mock DB storage, or BLOB for SQLite)
+        MOCK_DB[username] = locked_data.tolist()
+
+        return {"status": "success", "message": f"User {username} securely enrolled."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Enrollment failed: {str(e)}")
+
+async def login_user(username: str, password: str, video_file: UploadFile, audio_file: UploadFile):
+    """
+    Phase 2: Extracts new biometrics, XORs with database lock, 
+    decodes the noise, and verifies the restored password hash.
+    """
+    if username not in MOCK_DB:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    try:
+        # 1. Get the NEW 4216-bit Biometric Key (B') - Contains ~6% noise
+        new_biometric_key = await _extract_biometrics(video_file, audio_file)
+
+        # 2. Fetch the Locked Data from the database
+        locked_data = np.array(MOCK_DB[username], dtype=np.uint8)
+
+        # 3. The Unlock: XOR the Locked Data with the new Biometrics
+        # Result = Corrupted Codeword (C')
+        corrupted_codeword = np.bitwise_xor(locked_data, new_biometric_key)
+
+        # 4. The Math Magic: Decode to strip noise and restore the 256-bit hash
+        try:
+            restored_hash = await run_in_threadpool(bch_decoder.decode, corrupted_codeword)
+        except ValueError as e:
+            # If noise > 10%, the decoder throws a ValueError. Access Denied.
+            raise HTTPException(status_code=401, detail=f"Biometric verification failed: {str(e)}")
+
+        # 5. Hash the typed password to compare
+        live_password_hash = await run_in_threadpool(crypto_service.titan_hash_password, password)
+
+        # 6. Final Security Check
+        if np.array_equal(restored_hash, live_password_hash):
+            return {"status": "success", "message": "Access Granted. Identity verified."}
+        else:
+            raise HTTPException(status_code=401, detail="Invalid password.")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Login processing error: {str(e)}")

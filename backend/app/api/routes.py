@@ -1,18 +1,38 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Form
 from app.controllers import biometric_controller
 
 router = APIRouter()
 
-@router.post("/extract-kinetic")
-async def extract_kinetic_endpoint(file: UploadFile = File(...)):
+@router.post("/enroll")
+async def enroll_endpoint(
+    username: str = Form(...),
+    password: str = Form(...),
+    video_file: UploadFile = File(...),
+    audio_file: UploadFile = File(...)
+):
     """
-    Endpoint to receive a user's hand-swipe video and return the normalized matrix.
+    Signs up a new user using their 3-factor authentication data.
     """
-    return await biometric_controller.process_kinetic_upload(file)
+    return await biometric_controller.enroll_user(
+        username=username, 
+        password=password, 
+        video_file=video_file, 
+        audio_file=audio_file
+    )
 
-@router.post("/extract-audio")
-async def extract_audio_endpoint(file: UploadFile = File(...)):
+@router.post("/login")
+async def login_endpoint(
+    username: str = Form(...),
+    password: str = Form(...),
+    video_file: UploadFile = File(...),
+    audio_file: UploadFile = File(...)
+):
     """
-    Endpoint to receive a user's voice recording and return the binarized matrix.
+    Authenticates a returning user via the Fuzzy Commitment Scheme.
     """
-    return await biometric_controller.process_audio_upload(file)
+    return await biometric_controller.login_user(
+        username=username, 
+        password=password, 
+        video_file=video_file, 
+        audio_file=audio_file
+    )

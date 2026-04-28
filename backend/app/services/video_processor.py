@@ -122,3 +122,6 @@ class KineticBiometricService:
         final_1d_matrix = temporal_matrix.flatten()
         
         return final_1d_matrix
+    
+
+kinetic_service = KineticBiometricService()

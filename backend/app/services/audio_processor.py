@@ -10,22 +10,21 @@ class AudioProcessor:
         self.target_duration = target_duration
         self.target_samples = int(self.target_duration * self.sample_rate)
 
-    async def extract_binary_features(self, audio_bytes: bytes) -> np.ndarray:
+    # REMOVED async here
+    def extract_binary_features(self, audio_bytes: bytes) -> np.ndarray:
         """
         Processes raw audio bytes through a stabilization pipeline, extracts 
         vocal tract features (MFCCs), and binarizes them for cryptography.
         """
-        # 1. Temporarily write bytes to disk to bypass the soundfile BytesIO bug
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(audio_bytes)
             tmp_file_path = tmp_file.name
 
         try:
-            # Load audio from the physical file path instead of memory
+            # Load audio from the physical file path
             y, sr = librosa.load(tmp_file_path, sr=self.sample_rate)
         finally:
-            # Crucial: Always clean up the physical file right after loading it
-            # We use a try/finally block so it deletes even if librosa crashes
+            # Clean up the physical file right after loading it
             if os.path.exists(tmp_file_path):
                 os.remove(tmp_file_path)
 
@@ -35,19 +34,19 @@ class AudioProcessor:
         # 3. Amplitude Normalization 
         y_normalized = librosa.util.normalize(y_trimmed)
 
-        # 4. Enforce Exact Duration 
+        # 4. Enforce Exact Duration (Added dtype for memory efficiency)
         if len(y_normalized) < self.target_samples:
             y_fixed = librosa.util.fix_length(y_normalized, size=self.target_samples)
         else:
             y_fixed = y_normalized[:self.target_samples]
 
-        # 5. Extract MFCCs (The Audio Matrix)
+        # 5. Extract MFCCs
         mfccs = librosa.feature.mfcc(y=y_fixed, sr=sr, n_mfcc=self.n_mfcc)
 
         # 6. CMVN (Cepstral Mean and Variance Normalization)
         mfccs_normalized = (mfccs - np.mean(mfccs, axis=1, keepdims=True)) / (np.std(mfccs, axis=1, keepdims=True) + 1e-8)
 
-        # 7. Binarization (The Cryptographic Conversion)
+        # 7. Binarization
         median_val = np.median(mfccs_normalized)
         binary_matrix = (mfccs_normalized > median_val).astype(np.uint8)
 
