@@ -6,3 +6,10 @@ numpy==1.26.4
 python-multipart
 librosa
 soundfile
+scipy
+# Deep Learning Audio Engine
+torch==2.3.1
+torchaudio==2.3.1
+speechbrain==1.0.1
+soundfile==0.12.1  # Required by torchaudio under the hood
+huggingface_hub==0.22.2

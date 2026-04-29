@@ -1,0 +1,63 @@
+# ==========================================
+# AURACRYPT SPECIFIC
+# ==========================================
+# Ignore downloaded SpeechBrain / HuggingFace AI models
+pretrained_models/
+*.pt
+*.pth
+
+# Ignore raw biometric media and test uploads
+*.wav
+*.flac
+*.mp3
+*.mp4
+*.webm
+*.avi
+test_audio.wav
+test_a.wav
+
+# Ignore future SQLite databases (from your MOCK_DB roadmap)
+*.db
+*.sqlite3
+
+# ==========================================
+# PYTHON CORE
+# ==========================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# ==========================================
+# ENVIRONMENTS & SECRETS
+# ==========================================
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment variables (Never commit your secrets!)
+.env
+.env.local
+
+# ==========================================
+# OS & IDE
+# ==========================================
+# Mac / Windows system files
+.DS_Store
+Thumbs.db
+
+# VS Code / PyCharm settings
+.vscode/
+.idea/
+*.swp
+
+# ==========================================
+# LOGS & TEMP FILES
+# ==========================================
+*.log
+tmp/
+temp/
