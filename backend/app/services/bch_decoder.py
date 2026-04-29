@@ -6,7 +6,7 @@ class BCHDecoder:
         self.k = message_bits
         self.t = error_allowance
         self.m = 14
-        self.parity_length = self.t * self.m
+        self.parity_length = 4347  
         self.n = self.k + self.parity_length  # 4216 total bits
 
     def _calculate_syndromes(self, corrupted_codeword: np.ndarray) -> np.ndarray:
@@ -149,7 +149,7 @@ class BCHDecoder:
             corrected_codeword[pos] ^= 1  # Flip the bit back (0->1 or 1->0)
 
         # Extract and return the perfectly restored 256-bit password hash
-        final_codeword = corrected_codeword[:self.k]
+        final_codeword = corrected_codeword[::-1]
         
         return final_codeword[:self.k]
 

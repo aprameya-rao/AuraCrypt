@@ -22,7 +22,10 @@ async def _extract_biometrics(video_file: UploadFile, audio_file: UploadFile) ->
     # 1. Process Video
     video_temp_path = ""
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+        # THE FIX: Grab the actual extension (.webm, .mp4, etc)
+        file_ext = os.path.splitext(video_file.filename)[1] or ".mp4"
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_video:
             content = await video_file.read()
             temp_video.write(content)
             video_temp_path = temp_video.name
@@ -90,6 +93,15 @@ async def login_user(username: str, password: str, video_file: UploadFile, audio
         # Result = Corrupted Codeword (C')
         corrupted_codeword = np.bitwise_xor(locked_data, new_biometric_key)
 
+        live_password_hash_debug = await run_in_threadpool(crypto_service.titan_hash_password, password)
+        pure_codeword_debug = await run_in_threadpool(bch_encoder.encode, live_password_hash_debug)
+        actual_noise_vector = np.bitwise_xor(corrupted_codeword, pure_codeword_debug)
+        total_errors = np.sum(actual_noise_vector)
+        print(f"\n=============================================")
+        print(f"DIAGNOSTIC: Actual Biometric Errors: {total_errors} / 4876")
+        print(f"Max Allowed by GF(2^14): {bch_decoder.t}")
+        print(f"=============================================\n")
+        # ------------------------------
         # 4. The Math Magic: Decode to strip noise and restore the 256-bit hash
         try:
             restored_hash = await run_in_threadpool(bch_decoder.decode, corrupted_codeword)

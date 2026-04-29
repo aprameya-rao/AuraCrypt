@@ -4,25 +4,23 @@ import numpy as np
 
 class KineticBiometricService:
     def __init__(self):
-        # Initialize MediaPipe Hands
         self.mp_hands = mp.solutions.hands
-        self.hands = self.mp_hands.Hands(
-            static_image_mode=False,
-            max_num_hands=1,         # We only care about one hand swiping
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.7
-        )
-        # Target frame count for temporal normalization
-        self.target_frames = 32      
+        self.target_frames = 32    
 
     def process_video(self, video_path: str) -> np.ndarray:
-        """
-        Main pipeline: Reads video -> Extracts Landmarks -> Normalizes -> Returns 1D Matrix
-        """
-        raw_frames = self._extract_frames(video_path)
-        raw_landmarks = self._extract_landmarks(raw_frames)
+        # THE FIX: Move the Hands tracker initialization INSIDE the process loop
+        # Use a 'with' block so it is safely destroyed from memory after the video
+        with self.mp_hands.Hands(
+            static_image_mode=False,
+            max_num_hands=1,
+            min_detection_confidence=0.7,
+            min_tracking_confidence=0.7
+        ) as hands_tracker:
+            raw_frames = self._extract_frames(video_path)
+            
+            # Pass the isolated tracker to the extraction function
+            raw_landmarks = self._extract_landmarks(raw_frames, hands_tracker)
         
-        # We will need to write the logic for these two critical steps next
         spatially_normalized = self._normalize_spatial(raw_landmarks)
         final_matrix = self._normalize_temporal(spatially_normalized)
         
@@ -44,21 +42,14 @@ class KineticBiometricService:
         cap.release()
         return frames
 
-    def _extract_landmarks(self, frames: list) -> list:
-        """Passes frames through MediaPipe to get raw X, Y, Z coordinates."""
+    def _extract_landmarks(self, frames: list, hands_tracker) -> list:
         video_landmarks = []
-        
         for frame in frames:
-            results = self.hands.process(frame)
-            
+            results = hands_tracker.process(frame)
             if results.multi_hand_landmarks:
-                # Grab the first hand detected in the frame
                 hand_landmarks = results.multi_hand_landmarks[0]
-                
-                # Extract the 21 landmarks (x, y, z) into a list for this frame
                 frame_data = [[lm.x, lm.y, lm.z] for lm in hand_landmarks.landmark]
                 video_landmarks.append(frame_data)
-                
         return video_landmarks
     
     def _normalize_spatial(self, raw_landmarks: list) -> np.ndarray:
