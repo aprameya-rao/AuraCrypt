@@ -1,36 +1,53 @@
 import numpy as np
 
+# Import the encoder so we can dynamically check its required length
+from app.services.bch_encoder import bch_encoder
+
 class CryptoService:
     def __init__(self):
-        # We need our biometric key length to perfectly match our future Error-Corrected Password
-        self.master_key_length = 4603
+        # We no longer hardcode the length (e.g., 4603).
+        # It will be calculated dynamically to ensure absolute 1:1 shape matching.
+        pass
 
     def create_master_biometric_key(self, kinetic_array: np.ndarray, audio_binary: np.ndarray) -> np.ndarray:
         """
         Converts the float-based kinetic array into binary, merges it 
-        with the audio array, and pads it to strictly 4,216 bits.
+        with the audio array, and perfectly pads/truncates it to match the BCH codeword.
         """
         # 1. Binarize the Kinetic Data using the median threshold
-        median_val = np.median(kinetic_array)
-        kinetic_binary = (kinetic_array > median_val).astype(np.uint8)
+        if len(kinetic_array) > 0:
+            median_val = np.median(kinetic_array)
+            kinetic_binary = (kinetic_array > median_val).astype(np.uint8)
+        else:
+            kinetic_binary = np.array([], dtype=np.uint8)
 
-        # 2. Concatenate them together (This yields exactly 3,296 bits)
+        # 2. Concatenate them together
         raw_master_key = np.concatenate((kinetic_binary, audio_binary))
         
-        # 3. THE PADDING FIX: Stretch the array to 4,216 bits
+        # 3. Determine EXACT target length required by the BCH Encoder
+        # By passing a dummy 256-bit array, we mathematically guarantee the sizes will match
+        dummy_hash = np.zeros(256, dtype=np.uint8)
+        target_length = len(bch_encoder.encode(dummy_hash))
+        
+        # 4. THE PADDING FIX (Looping strategy for entropy preservation)
         current_length = len(raw_master_key)
-        padding_needed = self.master_key_length - current_length
+        padding_needed = target_length - current_length
         
         if padding_needed > 0:
-            # We "loop" the array by grabbing the first 920 bits and attaching them to the end.
-            # This ensures the padded section carries the exact same natural 10% noise rate.
-            padding_bits = raw_master_key[:padding_needed]
+            # We "loop" the array to maintain the natural biometric noise distribution.
+            # Using np.resize is a bulletproof way to loop the array as many times
+            # as needed without throwing an index error.
+            padding_bits = np.resize(raw_master_key, padding_needed)
             final_master_key = np.concatenate((raw_master_key, padding_bits))
+            
+        elif padding_needed < 0:
+            # Truncate if the raw biometrics somehow exceeded the BCH codeword size
+            final_master_key = raw_master_key[:target_length]
+            
         else:
-            final_master_key = raw_master_key[:self.master_key_length]
+            final_master_key = raw_master_key
             
         return final_master_key
-    
 
     def left_rotate(self, value: int, shift: int) -> int:
         """Helper for the Hash: Circular bitwise left rotation for 32-bit integers."""
