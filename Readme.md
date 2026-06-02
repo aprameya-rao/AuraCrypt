@@ -13,11 +13,9 @@ Instead of traditional machine learning confidence scores, this architecture uti
 * Deterministic Error Correction: A custom Berlekamp-Massey Algorithm and Chien Search engine capable of instantly absorbing dynamic biological variance.
 * ARX Hashing: Implements a custom "TitanHash" algorithm utilizing Add-Rotate-XOR operations to create a perfect 256-bit deterministic representation of the user's password.
 
----
 
 📂 Project Structure
 
-```text
 AuraCrypt/
 ├── backend/                              # FastAPI Python Backend
 │   ├── app/
@@ -47,7 +45,7 @@ AuraCrypt/
 │   └── vite.config.js / tailwind.config.js
 └── README.md
 
-```
+
 ## 🚀 How to Run the Project
 ### 1. Prerequisites
  * **Python 3.10+** (Tested on Python 3.12)
