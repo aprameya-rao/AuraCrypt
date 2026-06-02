@@ -1,6 +1,6 @@
 ```markdown
 🔐 AuraCrypt
-> **A Zero-Knowledge Multi-Modal Biometric Cryptosystem**
+> A Zero-Knowledge Multi-Modal Biometric Cryptosystem**
 
 📖 Project Overview
 AuraCrypt is an enterprise-grade biometric authentication system that fuses physical kinetic and audio traits into a unified, zero-knowledge cryptographic lock. By implementing a **Fuzzy Commitment Scheme**, the system securely encrypts user identities without ever retaining sensitive raw biometric data or plaintext passwords on the server.
