@@ -1,13 +1,13 @@
 ```markdown
-# 🔐 AuraCrypt
+🔐 AuraCrypt
 > **A Zero-Knowledge Multi-Modal Biometric Cryptosystem**
 
-## 📖 Project Overview
+📖 Project Overview
 AuraCrypt is an enterprise-grade biometric authentication system that fuses physical kinetic and audio traits into a unified, zero-knowledge cryptographic lock. By implementing a **Fuzzy Commitment Scheme**, the system securely encrypts user identities without ever retaining sensitive raw biometric data or plaintext passwords on the server.
 
 Instead of traditional machine learning confidence scores, this architecture utilizes strict **Galois Field Mathematics (GF 2^14)** and a custom **Bose-Chaudhuri-Hocquenghem (BCH) error-correction engine**. It deterministically authenticates users by mathematically repairing up to 330 bits (~7.1%) of natural biological noise on the fly, seamlessly bridging analog human biology with rigid cryptographic hashing.
 
-### ✨ Key Features
+✨ Key Features
 * **Multi-Modal Fusion:** Combines 3D kinetic hand-tracking (MediaPipe) and audio MFCC vocal analysis (Librosa) into a single 4,603-bit Master Biometric Key.
 * **Zero-Knowledge Storage:** Uses an XOR-based Fuzzy Commitment Scheme. The database only stores "Locked Data" (absolute static), making it mathematically impossible to reverse-engineer the biometrics or the password.
 * **Deterministic Error Correction:** A custom Berlekamp-Massey Algorithm and Chien Search engine capable of instantly absorbing dynamic biological variance.
@@ -15,7 +15,7 @@ Instead of traditional machine learning confidence scores, this architecture uti
 
 ---
 
-## 📂 Project Structure
+📂 Project Structure
 
 ```text
 AuraCrypt/
