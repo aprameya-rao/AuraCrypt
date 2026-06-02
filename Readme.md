@@ -45,15 +45,16 @@ AuraCrypt/
 │   └── vite.config.js / tailwind.config.js
 └── README.md
 
+'''
 
-## 🚀 How to Run the Project
-### 1. Prerequisites
- * **Python 3.10+** (Tested on Python 3.12)
- * **Node.js 18+ & npm/yarn** (For the React frontend)
- * **FFmpeg** installed on your system (required by Librosa/OpenCV for audio and video decoding).
-   * *Ubuntu/Debian:* sudo apt install ffmpeg
-   * *MacOS:* brew install ffmpeg
-### 2. Backend Installation (FastAPI)
+🚀 How to Run the Project
+1. Prerequisites
+ * Python 3.10+ (Tested on Python 3.12)
+ * Node.js 18+ & npm/yarn (For the React frontend)
+ * FFmpeg installed on your system (required by Librosa/OpenCV for audio and video decoding).
+   * Ubuntu/Debian: sudo apt install ffmpeg
+   * MacOS: brew install ffmpeg
+2. Backend Installation (FastAPI)
 Open a terminal and set up your Python environment:
 ```bash
 # Clone the repo and enter the backend directory
@@ -78,7 +79,7 @@ cd AuraCrypt/frontend
 npm install
 
 ```
-### 4. Running the Application
+4. Running the Application
 To run the full stack, you will need to start both servers in their respective terminals.
 **Terminal 1 (Backend):**
 ```bash
@@ -88,7 +89,7 @@ uvicorn app.main:app --reload
 
 ```
 *The backend API and Swagger UI will run on http://127.0.0.1:8000*
-**Terminal 2 (Frontend):**
+Terminal 2 (Frontend):
 ```bash
 cd frontend
 npm run dev   # Or 'npm start' depending on your React setup (Vite vs CRA)
