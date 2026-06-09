@@ -32,37 +32,35 @@ export default function App() {
     loadFFmpeg();
   }, []);
 
-  const convertMedia = async (file: File, outputName: string, outputMime: string): Promise<File> => {
+  // Reusable converter for both audio and video blobs
+  const convertMediaBlob = async (blob: Blob, outputName: string, outputMime: string): Promise<File> => {
     const ffmpeg = ffmpegRef.current;
-    const inputName = `input_${file.name.replace(/\s+/g, '_')}`; // Sanitize spaces
+    const inputName = `input_${outputName}.webm`;
     
-    await ffmpeg.writeFile(inputName, await fetchFile(file));
+    await ffmpeg.writeFile(inputName, await fetchFile(blob));
     await ffmpeg.exec(['-i', inputName, outputName]);
     const data = await ffmpeg.readFile(outputName);
     
-    const blob = new Blob([data], { type: outputMime });
-    return new File([blob], outputName, { type: outputMime });
+    return new File([new Blob([data], { type: outputMime })], outputName, { type: outputMime });
   };
 
-  const handleAuth = async (username: string, pass: string, video: File, audio: File, isLogin: boolean) => {
+  const handleAuth = async (username: string, pass: string, videoBlob: Blob, audioBlob: Blob, isLogin: boolean) => {
     setIsProcessing(true);
-    setStatus({ message: "Transcoding media locally...", type: "info" });
+    setStatus({ message: "Transcoding media to secure formats...", type: "info" });
 
     try {
-      // 1. Convert media using FFmpeg
-      const finalVideo = await convertMedia(video, 'video.mp4', 'video/mp4');
-      const finalAudio = await convertMedia(audio, 'audio.wav', 'audio/wav');
+      // Convert the separate blobs to the exact formats your backend expects
+      const finalVideo = await convertMediaBlob(videoBlob, 'video.mp4', 'video/mp4');
+      const finalAudio = await convertMediaBlob(audioBlob, 'audio.wav', 'audio/wav');
 
       setStatus({ message: "Connecting to server...", type: "info" });
 
-      // 2. Package everything into FormData
       const formData = new FormData();
       formData.append('username', username);
       formData.append('password', pass);
       formData.append('video_file', finalVideo);
       formData.append('audio_file', finalAudio);
 
-      // 3. Call the backend via our api.ts functions
       if (isLogin) {
         await loginUser(formData);
         setStatus({ message: "Login Successful.", type: "success" });
@@ -80,7 +78,7 @@ export default function App() {
   };
 
   const switchTab = (tab: 'login' | 'signup') => {
-    if (isProcessing) return; // Prevent switching while processing
+    if (isProcessing) return; 
     setActiveTab(tab);
     setStatus({ message: '', type: '' });
   };

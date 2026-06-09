@@ -289,3 +289,188 @@ button[type="submit"]:disabled {
     margin-top: 20px;
   }
 }
+/* --- CAMERA COMPONENT STYLES --- */
+.camera-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fafafa;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+}
+
+.camera-feed {
+  width: 100%;
+  height: 200px;
+  background: #111; /* Black background while camera loads */
+  object-fit: cover;
+  border: 2px solid #111;
+  transition: border-color 0.3s;
+}
+
+.camera-feed.recording {
+  border-color: #d32f2f;
+  box-shadow: inset 0 0 0 4px #d32f2f;
+}
+
+.camera-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.record-btn {
+  width: 100%;
+  padding: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid #111;
+  cursor: pointer;
+  margin-top: 0;
+  transition: all 0.2s;
+}
+
+.record-btn.start {
+  background-color: #fff;
+  color: #111;
+}
+
+.record-btn.start:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.record-btn.stop {
+  background-color: #d32f2f;
+  color: #fff;
+  border-color: #d32f2f;
+  animation: pulse 1.5s infinite;
+}
+
+.record-btn.stop:hover {
+  background-color: #b71c1c;
+}
+
+.record-success {
+  color: #2e7d32;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  padding-top: 5px;
+}
+
+.camera-error {
+  padding: 15px;
+  background: #ffebee;
+  border: 2px solid #c62828;
+  color: #c62828;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+/* --- RECORDER STYLES (Flat, High-Contrast Theme) --- */
+.recorder-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 2px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.media-feed {
+  width: 100%;
+  height: 180px;
+  background: #111;
+  object-fit: cover;
+  border-bottom: 2px solid #e0e0e0;
+  transition: border-color 0.3s;
+}
+
+.media-feed.recording {
+  border-bottom-color: #111;
+  box-shadow: inset 0 0 0 4px #111;
+}
+
+.audio-status-box {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaeaea;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
+  transition: all 0.3s;
+}
+
+.audio-status-box.recording {
+  background: #111;
+  color: #fff;
+  animation: pulse-bg 1.5s infinite;
+}
+
+.record-btn {
+  width: 100%;
+  padding: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  border-top: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 0;
+  margin: 0;
+}
+
+.record-btn.start {
+  background-color: #fff;
+  color: #111;
+}
+
+.record-btn.start:hover:not(:disabled) {
+  background-color: #111;
+  color: #fff;
+}
+
+.record-btn.stop {
+  background-color: #111;
+  color: #fff;
+}
+
+.record-btn.stop:hover {
+  background-color: #333;
+}
+
+.record-success {
+  color: #111;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 10px;
+  background: #e8f5e9;
+  border-top: 2px solid #e0e0e0;
+}
+
+.recorder-error {
+  padding: 15px;
+  background: #ffebee;
+  border: 2px solid #111;
+  color: #111;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+@keyframes pulse-bg {
+  0% { background-color: #111; }
+  50% { background-color: #333; }
+  100% { background-color: #111; }
+}
