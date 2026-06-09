@@ -7,7 +7,7 @@ app = FastAPI(title="Biometric Cryptosystem API")
 # --- 1. Standard CORS Configuration ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Matches your Vite frontend URL
+    allow_origins=["*"],  # Matches your Vite frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
