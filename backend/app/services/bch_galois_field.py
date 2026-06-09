@@ -1,7 +1,8 @@
 import numpy as np
+from app.services.crypto_constants import GALOIS_FIELD_M, PRIMITIVE_POLY
 
 class GaloisField:
-    def __init__(self, m=14):
+    def __init__(self, m=GALOIS_FIELD_M):
         """
         Initializes the Galois Field GF(2^m).
         For our 3,296-bit biometric key, we use m=12 (which supports up to 4095 bits).
@@ -12,7 +13,7 @@ class GaloisField:
         # The primitive polynomial is what forces the math to "wrap around" 
         # when a number gets too big. For GF(2^12), the standard integer 
         # representation of the polynomial (x^12 + x^6 + x^4 + x + 1) is 4179.
-        self.primitive_poly = 16427
+        self.primitive_poly = PRIMITIVE_POLY
         
         # Pre-compute lookup tables for blazing fast math
         self.exp_table = np.zeros(self.field_size * 2, dtype=np.int32)

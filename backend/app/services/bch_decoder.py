@@ -1,13 +1,14 @@
 import numpy as np
 from app.services.bch_galois_field import gf_engine
+from app.services.crypto_constants import HASH_SIZE, ERROR_ALLOWANCE_T, GALOIS_FIELD_M, PARITY_LENGTH, CODEWORD_LENGTH
 
 class BCHDecoder:
-    def __init__(self, message_bits=256, error_allowance=330):
+    def __init__(self, message_bits=HASH_SIZE, error_allowance=ERROR_ALLOWANCE_T):
         self.k = message_bits
         self.t = error_allowance
-        self.m = 14
-        self.parity_length = 4347  
-        self.n = self.k + self.parity_length  # 4216 total bits
+        self.m = GALOIS_FIELD_M
+        self.parity_length = PARITY_LENGTH  
+        self.n = CODEWORD_LENGTH
 
     def _calculate_syndromes(self, corrupted_codeword: np.ndarray) -> np.ndarray:
         """

@@ -2,6 +2,7 @@ import numpy as np
 
 # Import the encoder so we can dynamically check its required length
 from app.services.bch_encoder import bch_encoder
+from app.services.crypto_constants import HASH_SIZE
 
 class CryptoService:
     def __init__(self):
@@ -53,7 +54,7 @@ class CryptoService:
         """Helper for the Hash: Circular bitwise left rotation for 32-bit integers."""
         return ((value << shift) | (value >> (32 - shift))) & 0xFFFFFFFF
 
-    def titan_hash_password(self, password: str, output_bits: int = 256) -> np.ndarray:
+    def titan_hash_password(self, password: str, output_bits:int= HASH_SIZE) -> np.ndarray:
         """
         A custom ARX (Add-Rotate-XOR) cryptographic hash function built from scratch.
         Takes a string password and returns a strictly sized 1D NumPy array of 0s and 1s.
