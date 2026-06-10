@@ -1,3 +1,16 @@
+import os
+import logging
+
+# 1. Force the C++ backend to shut up BEFORE loading MediaPipe
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['GLOG_minloglevel'] = '2'
+
+# 2. 🚨 YOU MISSED THIS BLOCK! 🚨
+# Force the Python wrapper of absl to shut up
+import absl.logging
+absl.logging.set_verbosity(absl.logging.ERROR)
+
+
 import cv2
 import mediapipe as mp
 import numpy as np

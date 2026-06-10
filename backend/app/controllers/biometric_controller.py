@@ -10,12 +10,8 @@ from app.services.crypto_service import crypto_service
 from app.services.bch_encoder import bch_encoder
 from app.services.bch_decoder import bch_decoder
 
-# ==========================================
-# MOCK DATABASE (Replace with SQLite later)
-# ==========================================
-# Stores username as key, and the 4216-bit Locked Data array as value
+
 MOCK_DB = {} 
-# ==========================================
 
 async def _extract_biometrics(video_file: UploadFile, audio_file: UploadFile) -> np.ndarray:
     """Helper function to extract and merge the 4216-bit biometric key."""
